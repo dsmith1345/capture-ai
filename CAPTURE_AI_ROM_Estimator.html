@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAPTURE-AI | Aviation Sustainment ROM Estimator</title>
+<style>
+:root{--navy:#10243a;--blue:#1d5d86;--teal:#167c80;--ink:#182635;--muted:#627286;--line:#d9e1e8;--bg:#f3f6f9;--white:#fff;--amber:#fff4dc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Arial,Helvetica,sans-serif}
+header{background:linear-gradient(115deg,#10243a,#1b4d6d);color:white;padding:28px max(22px,calc((100% - 1120px)/2))}
+header h1{margin:0;font-size:28px;letter-spacing:.4px}header p{margin:6px 0 0;color:#d8e5ef;max-width:800px}
+main{max-width:1120px;margin:24px auto;padding:0 18px 40px}
+.notice{background:var(--amber);border:1px solid #e8ce91;border-radius:10px;padding:13px 16px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 2px 8px #10243a0a}
+h2{font-size:18px;margin:0 0 15px;color:var(--navy)}h3{font-size:15px;margin:18px 0 8px;color:var(--navy)}
+.field{margin:13px 0}.field label{display:flex;justify-content:space-between;gap:10px;font-weight:600;margin-bottom:6px}.field small,.muted{color:var(--muted);font-size:12px}
+input,select{width:100%;padding:10px 11px;border:1px solid #bdc9d4;border-radius:7px;font:inherit;background:#fff;color:var(--ink)}
+input[type=range]{padding:0;accent-color:var(--teal)}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{background:#f3f7fa;border:1px solid var(--line);border-radius:9px;padding:13px}.kpi span{display:block;color:var(--muted);font-size:12px}.kpi strong{display:block;font-size:23px;color:var(--navy);margin-top:3px}
+table{width:100%;border-collapse:collapse;margin-top:8px}td,th{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);font-size:13px}td:last-child,th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.total{background:#edf6f5;border:1px solid #b9d9d5;border-radius:10px;padding:15px;margin:14px 0}.total span{font-size:12px;color:var(--muted)}.total strong{display:block;font-size:30px;color:#12666a}
+.warn{background:#fff7e8;border:1px solid #ead29d;padding:11px;border-radius:8px;margin-top:12px;font-size:13px}
+button{border:0;border-radius:8px;padding:11px 15px;background:var(--blue);color:white;font-weight:700;cursor:pointer;margin:6px 6px 0 0}button.secondary{background:#e9eff4;color:var(--navy);border:1px solid var(--line)}
+details{border-top:1px solid var(--line);padding:12px 0}summary{font-weight:700;cursor:pointer;color:var(--navy)}
+.ips{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ips div{padding:10px;border:1px solid var(--line);border-radius:8px;font-size:13px}.ips b{display:block;color:var(--navy)}
+footer{color:var(--muted);font-size:12px;margin-top:20px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.ips{grid-template-columns:1fr}header h1{font-size:23px}}
+@media print{body{background:white}.panel{box-shadow:none;break-inside:avoid}button{display:none}header{background:#10243a!important;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CAPTURE-AI</h1>
+  <p>Customer Aviation Product-Support Estimating Assistant · Interactive rough-order-of-magnitude scenario model</p>
+</header>
+<main>
+  <div class="notice"><b>Prototype / illustrative pricing only.</b> These assumptions are not approved prices, verified market prices, actual costs, or a validated cost-per-flight-hour rate. Replace them with authorized, platform-specific data before business use. Do not enter proprietary, classified, CUI, or customer-sensitive information.</div>
+  <div class="grid">
+    <section class="panel">
+      <h2>1 · Customer scenario</h2>
+      <div class="field">
+        <label for="qty">Aircraft quantity <output id="qtyOut">6</output></label>
+        <input id="qty" type="range" min="3" max="36" step="1" value="6">
+        <small>Initial support-package assumption applies to the first three aircraft.</small>
+      </div>
+      <div class="field">
+        <label for="hours">Annual flight hours per aircraft <output id="hoursOut">500</output></label>
+        <input id="hours" type="range" min="250" max="1000" step="25" value="500">
+        <small>Basic utilization assumption: 500 hours per aircraft per year.</small>
+      </div>
+      <div class="field">
+        <label for="duration">Modeled period</label>
+        <select id="duration"><option value="2" selected>2 years — initial package basis</option><option value="3">3 years — sensitivity only</option><option value="5">5 years — sensitivity only</option><option value="10">10 years — sensitivity only</option></select>
+        <small>The supplied support package includes two years of basic spares. Selecting a longer period does not extend coverage or reprice the package.</small>
+      </div>
+      <h3>Editable illustrative sales assumptions</h3>
+      <div class="two">
+        <div class="field"><label for="aircraftPrice">Aircraft price ($M each)</label><input id="aircraftPrice" type="number" min="0" step=".1" value="70"></div>
+        <div class="field"><label for="baseSupport">Initial support package ($M)</label><input id="baseSupport" type="number" min="0" step=".1" value="20"></div>
+        <div class="field"><label for="includedQty">Aircraft included in base</label><input id="includedQty" type="number" min="1" step="1" value="3"></div>
+        <div class="field"><label for="additionalPrice">Additional support ($M / aircraft)</label><input id="additionalPrice" type="number" min="0" step=".1" value="3"></div>
+      </div>
+      <div class="field">
+        <label for="extraRate">Optional incremental price ($ / additional flight hour)</label>
+        <input id="extraRate" type="number" min="0" step="50" value="0">
+        <small>Keep at $0 until an approved incremental rate is available. This is a price input, not a calculated cost rate.</small>
+      </div>
+      <button id="reset" class="secondary">Reset assumptions</button>
+      <button id="print">Print / Save PDF</button>
+      <button id="csv" class="secondary">Export scenario CSV</button>
+    </section>
+    <section class="panel">
+      <h2>2 · Live estimate</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Aircraft acquisition</span><strong id="aircraftSales">$420.00M</strong></div>
+        <div class="kpi"><span>Support package sales</span><strong id="supportSales">$29.00M</strong></div>
+        <div class="kpi"><span>Fleet hours in period</span><strong id="fleetHours">6,000</strong></div>
+        <div class="kpi"><span>Hours above baseline</span><strong id="overHours">0</strong></div>
+      </div>
+      <div class="total"><span>TOTAL INITIAL PROGRAM SALES VALUE</span><strong id="totalSales">$449.00M</strong><small id="totalNote">Aircraft acquisition + support package; excludes any unpriced requirements.</small></div>
+      <table>
+        <tbody>
+          <tr><td>Aircraft acquisition</td><td id="lineAircraft">$420.00M</td></tr>
+          <tr><td>Initial support package</td><td id="lineSupport">$29.00M</td></tr>
+          <tr><td>Optional additional utilization charge</td><td id="lineExtra">$0.00M</td></tr>
+          <tr><th>Total program sales value</th><th id="lineTotal">$449.00M</th></tr>
+        </tbody>
+      </table>
+      <h3>Support revenue-per-flight-hour indicators</h3>
+      <table>
+        <tbody>
+          <tr><td>Baseline fleet hours (500 FH / aircraft / year)</td><td id="baseHours">6,000</td></tr>
+          <tr><td>Implied support revenue / modeled flight hour</td><td id="effectiveRate">$4,833</td></tr>
+          <tr><td>Baseline implied support revenue / FH</td><td id="baselineRate">$4,833</td></tr>
+          <tr><td>Incremental rate entered</td><td id="rateEntered">$0 / FH</td></tr>
+        </tbody>
+      </table>
+      <div id="utilWarning" class="warn" hidden></div>
+      <div id="durationWarning" class="warn" hidden>Duration sensitivity only: the package's $20M / $3M prices were supplied for a two-year basic-spares assumption. A longer term requires revised spares, replenishment, maintenance, and recurring-support pricing. The displayed package price has not been extended.</div>
+      <p class="muted">Important: implied support revenue per flight hour is a ratio of assumed sales revenue to modeled utilization. It is not actual operating cost, cost per flight hour, margin, or profit.</p>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:18px">
+    <h2>3 · Basic package scope and 12 IPS Elements</h2>
+    <p class="muted">The initial $20M package is assumed to include two years of basic spares, initial site stand-up, and initial technical publications for the first three aircraft. No allocation of the $20M among these elements is assumed.</p>
+    <div class="ips">
+      <div><b>1. Product Support Management</b>Program management and support integration — not separately priced.</div>
+      <div><b>2. Design Interface</b>Supportability and design-related engineering — future pricing module.</div>
+      <div><b>3. Sustaining Engineering</b>Technical investigations, reliability, configuration and obsolescence — future module.</div>
+      <div><b>4. Maintenance Planning & Management</b>Maintenance planning, inspections and repair — future module.</div>
+      <div><b>5. Supply Support</b>Two years of basic spares included in initial package.</div>
+      <div><b>6. Support Equipment</b>Ground support and test equipment — not priced in current baseline.</div>
+      <div><b>7. Technical Data</b>Initial technical publications included in initial package.</div>
+      <div><b>8. Training & Training Support</b>Initial and recurring training — future module.</div>
+      <div><b>9. IT Systems Continuous Support</b>Software, licenses and IT support — future module.</div>
+      <div><b>10. Facilities & Infrastructure</b>Initial operating-site stand-up included in initial package.</div>
+      <div><b>11. Packaging, Handling, Storage & Transportation</b>Freight, preservation, storage and transport — future module.</div>
+      <div><b>12. Manpower & Personnel</b>Maintainers, engineers, logisticians and other staffing — future module.</div>
+    </div>
+  </section>
+  <section class="panel" style="margin-top:18px">
+    <h2>4 · Estimating logic and boundaries</h2>
+    <details open><summary>Current formulas</summary>
+      <p><b>Aircraft acquisition:</b> aircraft quantity × aircraft unit price.</p>
+      <p><b>Support package:</b> initial package + max(0, aircraft quantity − included aircraft) × additional support price.</p>
+      <p><b>Fleet flight hours:</b> aircraft quantity × annual hours per aircraft × modeled years.</p>
+      <p><b>Baseline fleet hours:</b> aircraft quantity × 500 × modeled years.</p>
+      <p><b>Optional additional utilization charge:</b> max(0, actual fleet hours − baseline fleet hours) × optional incremental price per flight hour.</p>
+      <p><b>Effective support revenue per flight hour:</b> support package sales plus optional utilization charge, divided by modeled fleet flight hours.</p>
+    </details>
+    <details><summary>What is not yet priced</summary>
+      <p>Actual variable costs for maintenance, repairables, consumables, spares replenishment, manpower, engineering, training, support equipment, IT, transportation, and recurring facilities. These require authorized platform-specific cost, reliability, utilization, and contractual data.</p>
+    </details>
+    <details><summary>Commercial and governance cautions</summary>
+      <p>Do not treat the $6,667 initial-package or $3,000 additional-aircraft ratios as validated CPFH rates. Avoid double counting labor across Maintenance Planning & Management and Manpower & Personnel. Record customer facts separately from analyst assumptions. Require cost-estimator, product-support, engineering, and pricing-authority review before business use.</p>
+    </details>
+  </section>
+  <footer>CAPTURE-AI academic demonstration prototype. All figures are illustrative assumptions. This standalone file performs calculations locally in your browser; it does not connect to company systems or contain proprietary pricing data.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const ids=['qty','hours','duration','aircraftPrice','baseSupport','includedQty','additionalPrice','extraRate'];
+function num(id){const v=Number($(id).value);return Number.isFinite(v)?v:0}
+function moneyM(v){return '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'M'}
+function fmt(v){return Math.round(v).toLocaleString('en-US')}
+function calculate(){
+ const q=num('qty'),h=num('hours'),y=num('duration'),ap=num('aircraftPrice'),bp=num('baseSupport'),iq=Math.max(1,num('includedQty')),add=num('additionalPrice'),r=num('extraRate');
+ const aircraft=q*ap, support=bp+Math.max(0,q-iq)*add, actual=q*h*y, base=q*500*y, over=Math.max(0,actual-base), extra=over*r/1e6,total=aircraft+support+extra;
+ const effective=(support+extra)*1e6/Math.max(1,actual), baseline=(support)*1e6/Math.max(1,base);
+ $('qtyOut').textContent=q;$('hoursOut').textContent=fmt(h);
+ $('aircraftSales').textContent=moneyM(aircraft);$('supportSales').textContent=moneyM(support);$('fleetHours').textContent=fmt(actual);$('overHours').textContent=fmt(over);
+ $('totalSales').textContent=moneyM(total);$('lineAircraft').textContent=moneyM(aircraft);$('lineSupport').textContent=moneyM(support);$('lineExtra').textContent=moneyM(extra);$('lineTotal').textContent=moneyM(total);
+ $('baseHours').textContent=fmt(base);$('effectiveRate').textContent='$'+fmt(effective);$('baselineRate').textContent='$'+fmt(baseline);$('rateEntered').textContent='$'+fmt(r)+' / FH';
+ $('utilWarning').hidden=over===0;
+ $('utilWarning').textContent=over>0?fmt(over)+' flight hours exceed the 500-hour annual baseline over this period. '+(r===0?'No incremental charge has been applied because no approved incremental rate was supplied.':'An illustrative additional charge of '+moneyM(extra)+' has been applied using the entered rate.'):'Utilization is at or below the 500-hour annual baseline.';
+ $('durationWarning').hidden=y===2;
+ window.currentScenario={aircraft:q,annualHoursPerAircraft:h,years:y,aircraftUnitPriceM:ap,initialSupportM:bp,includedAircraft:iq,additionalSupportPerAircraftM:add,optionalIncrementalPricePerFH:r,aircraftSalesM:aircraft,supportPackageM:support,actualFleetHours:actual,baselineFleetHours:base,hoursAboveBaseline:over,optionalUtilizationChargeM:extra,totalProgramSalesM:total,impliedSupportRevenuePerFH:effective,baselineImpliedSupportRevenuePerFH:baseline};
+}
+ids.forEach(id=>$(id).addEventListener('input',calculate));
+$('reset').addEventListener('click',()=>{const vals={qty:6,hours:500,duration:2,aircraftPrice:70,baseSupport:20,includedQty:3,additionalPrice:3,extraRate:0};Object.entries(vals).forEach(([k,v])=>$(k).value=v);calculate()});
+$('print').addEventListener('click',()=>window.print());
+$('csv').addEventListener('click',()=>{calculate();const o=window.currentScenario;const rows=[['CAPTURE-AI scenario','Value'],...Object.entries(o)];const csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='capture-ai-scenario.csv';a.click();URL.revokeObjectURL(a.href)});
+calculate();
+</script>
+</body>
+</html>
